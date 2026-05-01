@@ -10,6 +10,8 @@ local Settings = {
     ESP = false,
     ESPNames = false,
     Strength = 0.5,
+    KillSwitch = false,
+    IsPaused = false
 }
 
 local LeaderUser = "3MkmNovaEoladAlg7bh"
@@ -36,19 +38,22 @@ local function DestroyESP(char)
     end
 end
 
+local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
+
 local function CleanAndPurgeEverything()
     Settings.Aimbot = false
     Settings.ESP = false
+    Settings.KillSwitch = true
     CurrentTarget = nil
     for _, p in pairs(Players:GetPlayers()) do
         if p.Character then DestroyESP(p.Character) end
     end
+    if ScreenGui then ScreenGui:Destroy() end
     if delfile and isfile and isfile(ImageFile) then
         pcall(function() delfile(ImageFile) end)
     end
 end
 
-local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
 local MainFrame = Instance.new("Frame", ScreenGui)
 MainFrame.Size = UDim2.new(0, 360, 0, 530)
 MainFrame.Position = UDim2.new(0.5, -180, 0.2, 0)
@@ -60,11 +65,11 @@ local CloseBtn = Instance.new("TextButton", MainFrame)
 CloseBtn.Size = UDim2.new(0, 30, 0, 30); CloseBtn.Position = UDim2.new(1, -35, 0, 5)
 CloseBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 0); CloseBtn.Text = "X"
 CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255); CloseBtn.Font = Enum.Font.GothamBold
-CloseBtn.MouseButton1Click:Connect(function() CleanAndPurgeEverything(); ScreenGui:Destroy() end)
+CloseBtn.MouseButton1Click:Connect(function() CleanAndPurgeEverything() end)
 
 local Title = Instance.new("TextLabel", MainFrame)
 Title.Size = UDim2.new(1, -40, 0, 40); Title.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Title.Text = "Bskot Aimbot V1.5"; Title.TextColor3 = Color3.fromRGB(0, 0, 0)
+Title.Text = "NoOne! | Bskot Was Here!"; Title.TextColor3 = Color3.fromRGB(0, 0, 0)
 Title.Font = Enum.Font.GothamBold; Title.TextSize = 16
 
 local NamesBtn = Instance.new("TextButton", MainFrame)
@@ -72,6 +77,7 @@ NamesBtn.Size = UDim2.new(0.9, 0, 0, 35); NamesBtn.Position = UDim2.new(0.05, 0,
 NamesBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20); NamesBtn.Text = "ESP NAMES: OFF"
 NamesBtn.TextColor3 = Color3.fromRGB(255, 255, 255); NamesBtn.BorderSizePixel = 1
 NamesBtn.MouseButton1Click:Connect(function()
+    if Settings.KillSwitch or Settings.IsPaused then return end
     Settings.ESPNames = not Settings.ESPNames
     NamesBtn.Text = "ESP NAMES: " .. (Settings.ESPNames and "ON" or "OFF")
 end)
@@ -88,7 +94,7 @@ SliderKnob.Size = UDim2.new(0, 14, 0, 14); SliderKnob.Position = UDim2.new(0.5, 
 local dragging = false
 SliderKnob.MouseButton1Down:Connect(function() dragging = true end)
 UserInputService.InputChanged:Connect(function(input)
-    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement and not Settings.IsPaused then
         local r = math.clamp((input.Position.X - SliderBack.AbsolutePosition.X) / SliderBack.AbsoluteSize.X, 0, 1)
         SliderKnob.Position = UDim2.new(r, -7, -1.2, 0)
         Settings.Strength = math.max(r, 0.05)
@@ -110,7 +116,7 @@ Logo.BackgroundTransparency = 1; Logo.Image = LoadLogo()
 
 local function SetupESP(p)
     local function Apply()
-        if not p.Character then return end
+        if not p.Character or Settings.IsPaused then return end
         local char = p.Character
         DestroyESP(char)
 
@@ -151,7 +157,7 @@ local function IsVisible(part)
 end
 
 RunService.RenderStepped:Connect(function()
-    if Settings.Aimbot then
+    if Settings.Aimbot and not Settings.IsPaused then
         if not CurrentTarget or not CurrentTarget.Character or CurrentTarget.Name == LeaderUser or 
            CurrentTarget.Character.Humanoid.Health <= 0 or not IsVisible(CurrentTarget.Character.Head) then
             
@@ -183,7 +189,7 @@ RunService.RenderStepped:Connect(function()
 end)
 
 UserInputService.InputBegan:Connect(function(input, proc)
-    if proc then return end
+    if proc or Settings.IsPaused then return end
     if input.KeyCode == Enum.KeyCode.F1 then
         Settings.Aimbot = not Settings.Aimbot; Settings.AutoClick = false; CurrentTarget = nil
     elseif input.KeyCode == Enum.KeyCode.F2 then
