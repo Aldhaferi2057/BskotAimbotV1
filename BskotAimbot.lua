@@ -1,0 +1,198 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local Camera = workspace.CurrentCamera
+local LocalPlayer = Players.LocalPlayer
+
+local Settings = {
+    Aimbot = false,
+    AutoClick = false,
+    ESP = false,
+    ESPNames = false,
+    Strength = 0.5,
+}
+
+local LeaderUser = "3MkmNovaEoladAlg7bh"
+local CurrentTarget = nil
+local LogoURL = "https://cdn.discordapp.com/attachments/1499560582947541132/1499617370505740339/4eda6c17ab4e8371cbee29da23b7c407.png?ex=69f57302&is=69f42182&hm=a0f95edb95d5756024b93a109a385850ba3baca25ce715cbb780afe0db007291&"
+local ImageFile = "BskotLogoTemp.png"
+
+local function LoadLogo()
+    if writefile and readfile then
+        local success = pcall(function()
+            if not isfile(ImageFile) then
+                writefile(ImageFile, game:HttpGet(LogoURL))
+            end
+        end)
+        if success and getcustomasset then return getcustomasset(ImageFile) end
+    end
+    return LogoURL
+end
+
+local function DestroyESP(char)
+    if char:FindFirstChild("BskotHL") then char.BskotHL:Destroy() end
+    if char:FindFirstChild("Head") and char.Head:FindFirstChild("BskotTag") then 
+        char.Head.BskotTag:Destroy() 
+    end
+end
+
+local function CleanAndPurgeEverything()
+    Settings.Aimbot = false
+    Settings.ESP = false
+    CurrentTarget = nil
+    for _, p in pairs(Players:GetPlayers()) do
+        if p.Character then DestroyESP(p.Character) end
+    end
+    if delfile and isfile and isfile(ImageFile) then
+        pcall(function() delfile(ImageFile) end)
+    end
+end
+
+local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
+local MainFrame = Instance.new("Frame", ScreenGui)
+MainFrame.Size = UDim2.new(0, 360, 0, 530)
+MainFrame.Position = UDim2.new(0.5, -180, 0.2, 0)
+MainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+MainFrame.BorderSizePixel = 1; MainFrame.BorderColor3 = Color3.fromRGB(255, 255, 255)
+MainFrame.Active = true; MainFrame.Draggable = true
+
+local CloseBtn = Instance.new("TextButton", MainFrame)
+CloseBtn.Size = UDim2.new(0, 30, 0, 30); CloseBtn.Position = UDim2.new(1, -35, 0, 5)
+CloseBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 0); CloseBtn.Text = "X"
+CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255); CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.MouseButton1Click:Connect(function() CleanAndPurgeEverything(); ScreenGui:Destroy() end)
+
+local Title = Instance.new("TextLabel", MainFrame)
+Title.Size = UDim2.new(1, -40, 0, 40); Title.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+Title.Text = "Bskot Aimbot V1.5"; Title.TextColor3 = Color3.fromRGB(0, 0, 0)
+Title.Font = Enum.Font.GothamBold; Title.TextSize = 16
+
+local NamesBtn = Instance.new("TextButton", MainFrame)
+NamesBtn.Size = UDim2.new(0.9, 0, 0, 35); NamesBtn.Position = UDim2.new(0.05, 0, 0.1, 0)
+NamesBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20); NamesBtn.Text = "ESP NAMES: OFF"
+NamesBtn.TextColor3 = Color3.fromRGB(255, 255, 255); NamesBtn.BorderSizePixel = 1
+NamesBtn.MouseButton1Click:Connect(function()
+    Settings.ESPNames = not Settings.ESPNames
+    NamesBtn.Text = "ESP NAMES: " .. (Settings.ESPNames and "ON" or "OFF")
+end)
+
+local PowerText = Instance.new("TextLabel", MainFrame)
+PowerText.Text = "LOCK SPEED: 50%"; PowerText.Position = UDim2.new(0, 0, 0.18, 0)
+PowerText.Size = UDim2.new(1, 0, 0, 20); PowerText.TextColor3 = Color3.fromRGB(255, 255, 255); PowerText.BackgroundTransparency = 1
+
+local SliderBack = Instance.new("Frame", MainFrame)
+SliderBack.Size = UDim2.new(0.8, 0, 0, 4); SliderBack.Position = UDim2.new(0.1, 0, 0.23, 0); SliderBack.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+local SliderKnob = Instance.new("TextButton", SliderBack)
+SliderKnob.Size = UDim2.new(0, 14, 0, 14); SliderKnob.Position = UDim2.new(0.5, -7, -1.2, 0); SliderKnob.Text = ""
+
+local dragging = false
+SliderKnob.MouseButton1Down:Connect(function() dragging = true end)
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local r = math.clamp((input.Position.X - SliderBack.AbsolutePosition.X) / SliderBack.AbsoluteSize.X, 0, 1)
+        SliderKnob.Position = UDim2.new(r, -7, -1.2, 0)
+        Settings.Strength = math.max(r, 0.05)
+        PowerText.Text = "LOCK SPEED: " .. math.floor(r * 100) .. "%"
+    end
+end)
+UserInputService.InputEnded:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end end)
+
+local InstructionText = Instance.new("TextLabel", MainFrame)
+InstructionText.Size = UDim2.new(0.9, 0, 0, 35); InstructionText.Position = UDim2.new(0.05, 0, 0.28, 0)
+InstructionText.BackgroundTransparency = 1
+InstructionText.Text = "Please Take The Secondary Gun To Make It Easy!"
+InstructionText.TextColor3 = Color3.fromRGB(255, 255, 0)
+InstructionText.Font = Enum.Font.GothamBold; InstructionText.TextSize = 13; InstructionText.TextWrapped = true
+
+local Logo = Instance.new("ImageLabel", MainFrame)
+Logo.Size = UDim2.new(0, 160, 0, 160); Logo.Position = UDim2.new(0.5, -80, 0.65, 0)
+Logo.BackgroundTransparency = 1; Logo.Image = LoadLogo()
+
+local function SetupESP(p)
+    local function Apply()
+        if not p.Character then return end
+        local char = p.Character
+        DestroyESP(char)
+
+        if p.Name == LeaderUser then
+            local hl = Instance.new("Highlight", char)
+            hl.Name = "BskotHL"; hl.FillColor = Color3.fromRGB(0, 170, 255); hl.Enabled = true
+            local head = char:WaitForChild("Head", 5)
+            if head then
+                local bg = Instance.new("BillboardGui", head)
+                bg.Name = "BskotTag"; bg.AlwaysOnTop = true; bg.Size = UDim2.new(0,200,0,100); bg.ExtentsOffset = Vector3.new(0,3,0)
+                local tl = Instance.new("TextLabel", bg); tl.Size = UDim2.new(1,0,1,0); tl.BackgroundTransparency = 1
+                tl.Text = "المحصن"; tl.TextColor3 = Color3.fromRGB(0, 170, 255); tl.TextSize = 35; tl.Font = Enum.Font.GothamBold
+            end
+        elseif Settings.ESP then
+            local hl = Instance.new("Highlight", char)
+            hl.Name = "BskotHL"; hl.FillColor = Color3.fromRGB(255, 255, 255); hl.Enabled = true
+            if Settings.ESPNames and char:FindFirstChild("Head") then
+                local bg = Instance.new("BillboardGui", char.Head)
+                bg.Name = "BskotTag"; bg.AlwaysOnTop = true; bg.Size = UDim2.new(0,100,0,50); bg.ExtentsOffset = Vector3.new(0,2,0)
+                local tl = Instance.new("TextLabel", bg); tl.Size = UDim2.new(1,0,1,0); tl.BackgroundTransparency = 1
+                tl.Text = p.Name; tl.TextColor3 = Color3.fromRGB(255, 255, 255); tl.TextSize = 14
+            end
+        end
+    end
+    Apply()
+    p.CharacterAdded:Connect(Apply)
+end
+
+for _, p in pairs(Players:GetPlayers()) do SetupESP(p) end
+Players.PlayerAdded:Connect(SetupESP)
+
+local function IsVisible(part)
+    local params = RaycastParams.new()
+    params.FilterDescendantsInstances = {LocalPlayer.Character, ScreenGui}
+    params.FilterType = Enum.RaycastFilterType.Exclude
+    local ray = workspace:Raycast(Camera.CFrame.Position, (part.Position - Camera.CFrame.Position).Unit * 1000, params)
+    return ray and ray.Instance:IsDescendantOf(part.Parent)
+end
+
+RunService.RenderStepped:Connect(function()
+    if Settings.Aimbot then
+        if not CurrentTarget or not CurrentTarget.Character or CurrentTarget.Name == LeaderUser or 
+           CurrentTarget.Character.Humanoid.Health <= 0 or not IsVisible(CurrentTarget.Character.Head) then
+            
+            local nearest = nil
+            local minDistance = math.huge
+            for _, p in pairs(Players:GetPlayers()) do
+                if p ~= LocalPlayer and p.Name ~= LeaderUser and p.Character and p.Character:FindFirstChild("Head") and p.Character.Humanoid.Health > 0 then
+                    if IsVisible(p.Character.Head) then
+                        local headPos, onScreen = Camera:WorldToViewportPoint(p.Character.Head.Position)
+                        local mouseDist = (Vector2.new(headPos.X, headPos.Y) - UserInputService:GetMouseLocation()).Magnitude
+                        if Settings.Strength >= 0.95 or (onScreen and mouseDist < (Settings.Strength * 2000)) then
+                            local d = (p.Character.Head.Position - LocalPlayer.Character.Head.Position).Magnitude
+                            if d < minDistance then minDistance = d; nearest = p end
+                        end
+                    end
+                end
+            end
+            CurrentTarget = nearest
+        end
+
+        if CurrentTarget and CurrentTarget.Character:FindFirstChild("Head") then
+            local head = CurrentTarget.Character.Head
+            Camera.CFrame = Camera.CFrame:Lerp(CFrame.lookAt(Camera.CFrame.Position, head.Position), Settings.Strength)
+            if Settings.AutoClick and Camera.CFrame.LookVector:Dot((head.Position - Camera.CFrame.Position).Unit) > 0.999 then
+                if mouse1click then mouse1click() end
+            end
+        end
+    end
+end)
+
+UserInputService.InputBegan:Connect(function(input, proc)
+    if proc then return end
+    if input.KeyCode == Enum.KeyCode.F1 then
+        Settings.Aimbot = not Settings.Aimbot; Settings.AutoClick = false; CurrentTarget = nil
+    elseif input.KeyCode == Enum.KeyCode.F2 then
+        Settings.Aimbot = not Settings.Aimbot; Settings.AutoClick = Settings.Aimbot; CurrentTarget = nil
+    elseif input.KeyCode == Enum.KeyCode.F3 then
+        Settings.ESP = true; for _, p in pairs(Players:GetPlayers()) do SetupESP(p) end
+    elseif input.KeyCode == Enum.KeyCode.F4 then
+        Settings.ESP = false; for _, p in pairs(Players:GetPlayers()) do if p.Character then DestroyESP(p.Character) end end
+    elseif input.KeyCode == Enum.KeyCode.LeftControl then
+        MainFrame.Visible = not MainFrame.Visible
+    end
+end)
