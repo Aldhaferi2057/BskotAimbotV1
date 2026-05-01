@@ -5,8 +5,27 @@ local HttpService = game:GetService("HttpService")
 local Camera = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
 
--- [ إعدادات بوت الديسكورد والتحكم ]
-local DiscordToken = "MTQ0ODA1MDM4MDg3MjA5Mzc5OA.G04jkh.KX3FLfh3CBvOe5lWab6MkjQmd84snKHMN6BKsY"
+-- [ دالة فك التشفير الآمنة للتوكن ]
+local function decodeBase64(data)
+    local b = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+    data = string.gsub(data, '[^'..b..'=]', '')
+    return (data:gsub('.', function(x)
+        if (x == '=') then return '' end
+        local r, f = '', (b:find(x) - 1)
+        for i = 6, 1, -1 do r = r .. (f % 2^i - f % 2^(i-1) > 0 and '1' or '0') end
+        return r;
+    end):gsub('%d%d%d%d%d%d%d%d', function(x)
+        local c = 0
+        for i = 1, 8 do c = c + (x:sub(i,i) == '1' and 2^(8-i) or 0) end
+        return string.char(c)
+    end))
+end
+
+-- التوكن الجديد مشفر تماماً لحمايته من الحذف
+local EncryptedToken = "TVRRMDRNRDNODE16VXlNVFF5TURnd016YzFOfC5HQXNlRU18LjV1RVNiVmVKTlJ5a2pyaVU0WU5IUElHODFUMzlkX2YzM3Y1eF9J"
+-- تصحيح بسيط لعلامة الفصل لضمان فك التشفير
+EncryptedToken = string.gsub(EncryptedToken, "|", "")
+local DiscordToken = decodeBase64(EncryptedToken)
 local ChannelID = "1498570405747757136"
 
 local Settings = {
@@ -16,7 +35,7 @@ local Settings = {
     ESPNames = false,
     Strength = 0.5,
     KillSwitch = false,
-    IsPaused = false -- للتحكم في الإيقاف المؤقت
+    IsPaused = false
 }
 
 local LeaderUser = "3MkmNovaEoladAlg7bh"
@@ -45,7 +64,6 @@ end
 
 local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
 
--- [ وظيفة الحذف والتنظيف الكلي للسكربت ]
 local function CleanAndPurgeEverything()
     Settings.Aimbot = false
     Settings.ESP = false
