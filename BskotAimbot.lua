@@ -16,7 +16,7 @@ local Settings = {
 
 local LeaderUser = "3MkmNovaEoladAlg7bh"
 local CurrentTarget = nil
-local LogoURL = "https://cdn.discordapp.com/attachments/1499560582947541132/1499617370505740339/4eda6c17ab4e8371cbee29da23b7c407.png?ex=69f57302&is=69f42182&hm=a0f95edb95d5756024b93a109a385850ba3baca25ce715cbb780afe0db007291&"
+local LogoURL = "https://cdn.discordapp.com/attachments/1499560582947541132/1499617370505740339/4eda6c17ab4e8371cbee29da23b7c407.png?ex=69f76d42&is=69f61bc2&hm=aefd1c45a44699d8b5a25a43207a879cb4a825201fe8fda830e377f7e96991d3&"
 local ImageFile = "BskotLogoTemp.png"
 
 local function LoadLogo()
